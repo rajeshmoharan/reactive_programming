@@ -1,6 +1,8 @@
 package org.rajesh.users.presentation;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.rajesh.users.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,22 +14,27 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/users")
+@RequiredArgsConstructor
 public class UserController {
+
+    private final UserService userService;
 
     @PostMapping("/create")
 //    @ResponseStatus(HttpStatus.CREATED) //another way to set the status code
     public Mono<ResponseEntity<UserRest>> createUser(@RequestBody @Valid Mono<CreateUserRequest> createUserRequest) {
-        return createUserRequest
-                .map(request -> new UserRest(UUID.randomUUID(),request.getFirstName(),request.getLastName(),request.getEmail()))
+        return userService.createUser(createUserRequest)
                 .map(userRest -> ResponseEntity.status(HttpStatus.CREATED)
                         .location(URI.create("/users/" + userRest.getId()))
-                        .body(userRest)
-                );
+                        .body(userRest));
     }
 
     @GetMapping("/{userId}")
-    public Mono<UserRest> getUser(@PathVariable UUID userId) {
-        return  Mono.just(new UserRest(userId,"Rajesh","Moharana","rajesh@gmail.com"));
+    public Mono<ResponseEntity<UserRest>> getUser(@PathVariable UUID userId) {
+        return userService.getUserById(userId)
+                .map(userRest ->
+                        ResponseEntity.status(HttpStatus.OK)
+                                .body(userRest))
+                .switchIfEmpty(Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND).build()));
     }
 
     @GetMapping
