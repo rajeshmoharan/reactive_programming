@@ -28,7 +28,7 @@ public class UserServiceImpl implements UserService {
                 .mapNotNull(this::convertToEntity)
                 .flatMap(userRepository::save)
                 .map(this::convertToRest)
-                .onErrorMap(exe ->  new ResponseStatusException(HttpStatus.BAD_REQUEST,exe.getMessage()));
+                .onErrorMap(exe -> return new ResponseStatusException(HttpStatus));
     }
 
     @Override
